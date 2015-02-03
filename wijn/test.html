@@ -1,0 +1,98 @@
+
+<html>
+<head>
+<link rel="shortcut icon" type="image/png" href="http://www.kenswineguide.com/favicon.ico"/>
+
+
+<link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+  background-image: url('http://upload.wikimedia.org/wikipedia/commons/c/c9/Sonomamtnvineyard.jpg')
+}
+
+.jumbotron {
+   background: rgba(150, 84, 84, 0.5); 
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<br/>
+
+<div class="jumbotron">
+      
+
+<div class="progress">
+  <div class="progress-bar" role="progressbar" aria-valuenow="60"
+       aria-valuemin="0" aria-valuemax="100" style="width: 60%;
+    text-align:left; padding-left: 1em">
+    3 / 12
+  </div>
+</div>
+
+<div class="row">
+<div class="col-sm-4"><h4>Appellation:</h4></div>
+<div class="col-sm-8"><h4>Anjou</h4></div>
+</div> 
+<div class="row">
+<div class="col-sm-4"><h4>Goede antwoord:</h4></div>
+<div class="col-sm-8"><h4>Bordeaux</h4></div>
+</div> 
+<div class="row">
+<div class="col-sm-4"><h4>Jouw keuze:</h4></div>
+<div class="col-sm-8"><h4 class='goed'>Rose d'Anjou</h4></div>
+</div> 
+<hr/>
+
+
+<p>Welke subregio?</p>
+
+<form action="/wijn/subregio/Loire" method="post">
+<input type='hidden' name='csrfmiddlewaretoken' value='r9abRXADc5d6DMBmuKWAnEZnxWEyUJlX' />
+<input type='hidden' name='appellation' value='784' />
+<input type='hidden' name='nvragen' value='1' />
+<input type='hidden' name='ngoed' value='1' />
+
+<div class="row">
+<div class="col-lg-4 col-md-6 col-sm-12">
+<input class="btn btn-primary btn-lg" type="submit" name="subregion"
+       id="IGP wijnen" value="IGP wijnen" style="width:100%; margin-bottom:1em"/>
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-4 col-md-6 col-sm-12">
+<input class="btn btn-primary btn-lg" type="submit" name="subregion" id="Anjou-Saumur" value="Anjou-Saumur" onclick="this.form.submit()" style="width:100%; margin-bottom:1em"/>
+
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-4 col-md-6 col-sm-12">
+<input class="btn btn-primary btn-lg" type="submit" name="subregion" id="Centre" value="Centre" onclick="this.form.submit()" style="width:100%; margin-bottom:1em"/>
+
+</div>
+</div>
+
+
+</form>
+
+
+
+
+
+	</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+

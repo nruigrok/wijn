@@ -1,0 +1,25 @@
+{% extends "wijn/base.html" %}
+
+{% block content %}
+
+
+<h2>Kies hieronder een regio om de appellations te oefenen</h2>
+
+
+
+{% for regio in regiolijst %}
+<a class="btn btn-primary btn-lg" href="{% url 'subregio' regio=regio  %}" role="button margin:500px"> {{regio}}</a>
+{% endfor %}
+<p>
+</p>
+
+<a class="btn btn-primary btn-lg" href="{% url 'subregio' regio="all"  %}" role="button">Alle regio's
+
+<a class="btn btn-primary btn-lg" href="{% url 'index' %}" role="button">Terug naar begin</a>
+
+
+
+
+
+{% endblock %}
+
