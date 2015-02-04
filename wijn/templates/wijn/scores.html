@@ -1,0 +1,78 @@
+{% extends "wijn/base.html" %}
+
+{% block content %}
+<h1>Overzicht scores</h1>
+
+<div class="row">
+
+<div class="col-sm-12 col-md-5">
+<h2>Jouw beste scores</h2>
+<table class="table">
+<tr><th>Vraag</th><th>Regio</th><th>Score</th></tr>
+{% for s in my_best.values %}
+<tr>
+<td><a href="{{s.url}}">{{s.vraag}}</a></td>
+<td>{{s.region}}</td>
+<td>{{s.score}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<div class="col-sm-12 col-md-6 col-md-offset-1">
+<h2>Alle beste scores</h2>
+<table class="table">
+<tr><th>Vraag</th><th>Regio</th><th>Gebruiker</th><th>Score</th></tr>
+{% for s in best.values %}
+<tr>
+<td>{{s.vraag}}</td>
+<td>{% if s.region %}{{s.region}}{% else %}{% endif %}</td>
+<td>{% if s.user %}{{s.user}}{% else %}(anoniem){% endif %}</td>
+<td>{{s.score}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+</div>
+
+
+<div class="row">
+
+<div class="col-sm-12 col-md-5">
+<h2>Jouw beste pogingen</h2>
+<table class="table">
+<tr><th>Tijd</th><th>Vraag</th><th>Regio</th><th>Score</th></tr>
+{% for s in my_best.values %}
+<tr>
+<td>{{s.timestamp}}</td>
+<td>{{s.vraag}}</td>
+<td>{{s.region}}</td>
+<td>{{s.score}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<div class="col-sm-12 col-md-6 col-md-offset-1">
+<h2>Alle laatste pogingen</h2>
+<table class="table">
+<tr><th>Tijd</th><th>Vraag</th><th>Regio</th><th>Gebruiker</th><th>Score</th></tr>
+{% for s in best.values %}
+<tr>
+<td>{{s.timestamp}}</td>
+<td>{{s.vraag}}</td>
+<td>{% if s.region %}{{s.region}}{% else %}{% endif %}</td>
+<td>{% if s.user %}{{s.user}}{% else %}(anoniem){% endif %}</td>
+<td>{{s.score}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+</div>
+
+
+
+
+{% endblock %}

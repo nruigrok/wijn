@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 class Appellation(models.Model):
@@ -12,3 +13,9 @@ class Appellation(models.Model):
     def __unicode__(self):
         return self.name
 
+class Score(models.Model):
+    vraag = models.CharField(max_length=255)
+    region = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(User, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    score = models.IntegerField()

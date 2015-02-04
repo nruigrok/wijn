@@ -1,13 +1,14 @@
 import re, random
 # Create your views here.
 
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from wijn.models import Appellation
+from wijn.models import Appellation, Score
 from random import shuffle
 
 def index(request):
@@ -91,6 +92,11 @@ def regio(request):
         if goed:
             ngoed = ngoed + 1
         perc = 10 + nvragen*90/20
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='regio', user=user, score=ngoed)
+
     else:
         nvragen = 0
         ngoed = 0
@@ -141,6 +147,11 @@ def subregio(request, regio):
         if goed:
             ngoed = ngoed + 1
         perc = 10 + nvragen*90/20
+
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='Subregio', region=regio, user=user, score=ngoed)
     else:
         nvragen = 0
         ngoed = 0
@@ -207,3 +218,34 @@ def register(request):
     return render(request, "registration/register.html", {
         'form': form,
     })
+
+def scores(request):
+    best = {}
+    my_best = {}
+    last = {}
+    my_last = {}
+
+    def beats(new, existing):
+        if existing is None: return True
+        if new.score > existing.score: return True
+        if new.score == existing.score: return new.timestamp < existing.timestamp
+
+    for s in Score.objects.all():
+        vraag = s.vraag.lower()
+        if vraag == 'regio':
+            s.url = reverse(vraag)
+        else:
+            s.url = reverse(vraag, args=[s.region])
+        key = s.vraag, s.region
+        if request.user.is_authenticated() and s.user == request.user:
+            if beats(s, my_best.get(key)):
+                my_best[key] = s
+            if (key not in my_last) or (my_last[key].timestamp < s.timestamp):
+                my_last[key] = s
+
+        if beats(s, best.get(key)):
+            best[key] = s
+        if (key not in last) or (last[key].timestamp < s.timestamp):
+            last[key] = s
+
+    return render(request, 'wijn/scores.html', locals())
