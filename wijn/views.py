@@ -1,8 +1,12 @@
-from django.shortcuts import render
 import re, random
 # Create your views here.
-from django.http import HttpResponse
- 
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render
+from django.contrib.auth import authenticate, login
+
 from wijn.models import Appellation
 from random import shuffle
 
@@ -11,7 +15,7 @@ def index(request):
 
 
 def xxxregio(request):
-    
+
     ap = Appellation.objects.order_by('?')[0]
     while overlap(ap.name,ap.region):
          ap = Appellation.objects.order_by('?')[0]
@@ -27,7 +31,7 @@ def xxxregio(request):
         vraag = Appellation.objects.get(pk=vraag)
         if "region" in request.POST:
             keuze = request.POST["region"]
-            goed = (keuze == vraag.region) 
+            goed = (keuze == vraag.region)
         else:
             goed = False
         nvragen = int(request.POST["nvragen"]) + 1
@@ -43,7 +47,7 @@ def xxxregio(request):
 
 
 def regio(request):
-    
+
     vraagtype = random.choice(["welkeregio", "welkeap"])
 
     ap = Appellation.objects.order_by('?')[0]
@@ -52,7 +56,7 @@ def regio(request):
 
     if vraagtype == "welkeap":
         vraagtekst = "Welke appellation ligt in {ap.region}".format(**locals())
-         
+
         afleiders = list(Appellation.objects.exclude(region=ap.region))
         shuffle(afleiders)
         keuzes = afleiders[:3] + [ap]
@@ -74,13 +78,13 @@ def regio(request):
         antwoord = request.POST["antwoord"]
         vraag = Appellation.objects.get(pk=vraag)
 
-        
+
         if oudevraagtype == "welkeap":
             antwoord = Appellation.objects.get(pk=antwoord)
         elif oudevraagtype == "welkeregio":
             vraag = vraag.region
-        
-        goed = (antwoord == vraag) 
+
+        goed = (antwoord == vraag)
 
         nvragen = int(request.POST["nvragen"]) + 1
         ngoed = int(request.POST["ngoed"])
@@ -170,4 +174,36 @@ def kleur(request, regio):
     return render(request, 'wijn/kleur.html', locals())
 
 
+class RegistrationForm(UserCreationForm):
+    first_name = forms.CharField(max_length=30)
+    last_name = forms.CharField(max_length=30)
 
+    class Meta:
+        model = UserCreationForm.Meta.model
+        fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
+
+    def save(self, commit=True):
+        user = super(RegistrationForm, self).save(commit=False)
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+
+        if commit:
+            user.save()
+        return user
+
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            new_user = form.save()
+            new_user = authenticate(username=request.POST['username'],
+                                    password=request.POST['password1'])
+            login(request, new_user)
+
+            return HttpResponseRedirect("/wijn/")
+    else:
+        form = RegistrationForm()
+    return render(request, "registration/register.html", {
+        'form': form,
+    })

@@ -48,3 +48,6 @@ nosetests.xml
 
 # static files
 navigator/media/static
+
+db.sqlite3
+Appellation*.csv

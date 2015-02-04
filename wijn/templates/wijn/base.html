@@ -6,8 +6,11 @@
 <style>
 h4{margin-top:5px;margin-bottom:5px}
 hr{margin-top:5px;margin-bottom:5px}
-
-
+.navbar { background:rgba(150, 84, 84, 0.3); border-bottom:none;}
+.navbar { min-height: 32px; height: 32px; }
+.navbar .navbar-brand { padding: 0px 12px;font-size: 16px;line-height: 32px; }
+.navbar .navbar-nav > li > a {  padding-top: 0px; padding-bottom: 0px; line-height: 32px; }
+.help-block {color: inherit}
 body {
   background-image: url('http://upload.wikimedia.org/wikipedia/commons/c/c9/Sonomamtnvineyard.jpg');background-repeat: no-repeat; background-position: center;
 }
@@ -20,6 +23,29 @@ body {
 </style>
 </head>
 <body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a href="{% url 'index' %}">Home</a></li>
+
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+{% if request.user.is_authenticated %}
+<li><a href="/logout">{{request.user.first_name}} (log out)</a></li>
+{% else %}
+<li><a href="/register">Sign up</a></li>
+<li><a href="/login">Sign in</a></li>
+{% endif %}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
 
 <div class="container">
 <br/>

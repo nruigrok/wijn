@@ -1,0 +1,14 @@
+{% extends "wijn/base.html" %}
+{% load bootstrap %}
+
+{% block title %}Create an account{% endblock %}
+
+{% block content %}
+  <h1>Sign up for wijn!</h1>
+
+  <form action="" method="post">
+{% csrf_token %}
+      {{ form|bootstrap_horizontal }}
+      <input type="submit" value="Create the account">
+  </form>
+{% endblock %}

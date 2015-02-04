@@ -1,7 +1,7 @@
 {% extends "wijn/base.html" %}
 
 {% block content %}
-    <h1>Hallo, mede-wijnliefhebber!</h1>
+    <h1>Hallo, {% if request.user.is_authenticated %}{{ request.user.first_name }}{% else %}mede-wijnliefhebber!{% endif %}</h1>
     <p>Wij vinden wijn helemaal hip, maar weten we er eigenlijk iets van? Oefenen?
     <p>
       <a class="btn btn-primary btn-lg" href="{% url 'regio' %}" role="button">Regio's</a>
