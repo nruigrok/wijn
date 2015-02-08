@@ -103,6 +103,68 @@ def regio(request):
 
     return render(request, 'wijn/regio.html', locals())
 
+
+
+def kleurmeerkeuze(request):
+    vraagtype = random.choice(["welkekleur", "welkeap"])
+
+    appellations = Appellation.objects.exclude(rood=False,wit=False,rose=False,zoet=False,mousserend=False)
+    ap = appellations.order_by('?')[0]
+    apkleur = kleurstring(ap)
+
+    if vraagtype == "welkekleur":
+        vraagtekst = u"Welke kleur mag in {ap.name}".format(**locals())
+        keuzes = [apkleur]
+        afleiders = list(appellations.order_by('?'))
+        for afleider in afleiders:
+            if kleurstring(afleider) not in keuzes:
+                keuzes.append(kleurstring(afleider))
+        keuzes = keuzes[:4] 
+        keuzes = [(k, k) for k in keuzes]
+    else:
+        vraagtekst = u"Welke appellation mag {apkleur}".format(**locals())
+        keuzes = [ap]
+        afleiders = list(appellations.order_by('?'))
+        for afleider in afleiders:
+            if kleurstring(afleider) != apkleur:
+                keuzes.append(afleider)
+        keuzes = keuzes[:4] 
+        keuzes = [(k.id, k.name) for k in keuzes]
+
+    shuffle(keuzes)
+
+    if request.POST:
+        oudevraag = request.POST["vraagtekst"]
+        vraag = request.POST["vraag"]
+        oudevraagtype = request.POST["vraagtype"]
+        antwoord = request.POST["antwoord"]
+        vraag = Appellation.objects.get(pk=vraag)
+
+
+        if oudevraagtype == "welkekleur":
+            goedeantwoord = kleurstring(vraag)
+        elif oudevraagtype == "welkeap":
+            goedeantwoord = vraag.name
+            antwoord = Appellation.objects.get(pk=antwoord).name
+            
+        goed = (antwoord == goedeantwoord)
+
+        nvragen = int(request.POST["nvragen"]) + 1
+        ngoed = int(request.POST["ngoed"])
+        if goed:
+            ngoed = ngoed + 1
+        perc = 10 + nvragen*90/20
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='kleurmeerkeuze', user=user, score=ngoed)
+
+    else:
+        nvragen = 0
+        ngoed = 0
+
+    return render(request, 'wijn/kleurmeerkeuze.html', locals())
+
 def regiokiezer(request):
     regiolijst = list(Appellation.objects.only("region").exclude(region="").exclude(subregion="").distinct().values_list("region", flat=True))
     return render(request, 'wijn/regiokiezer.html', locals())
@@ -158,6 +220,11 @@ def subregio(request, regio):
 
     return render(request, 'wijn/subregio.html', locals())
 
+
+def kleurstring(ap):
+    kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"] 
+                         if getattr(ap, a)]).title()
+    return kleurap
 
 def kleur(request, regio):
     appellations = Appellation.objects.only("region").distinct()
@@ -232,7 +299,7 @@ def scores(request):
 
     for s in Score.objects.all():
         vraag = s.vraag.lower()
-        if vraag == 'regio':
+        if vraag in ['kleurmeerkeuze','regio']:
             s.url = reverse(vraag)
         else:
             s.url = reverse(vraag, args=[s.region])
