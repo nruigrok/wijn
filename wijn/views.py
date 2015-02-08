@@ -8,7 +8,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from wijn.models import Appellation, Score
+from wijn.models import Appellation, Score, Druif
 from random import shuffle
 
 def index(request):
@@ -164,6 +164,92 @@ def kleurmeerkeuze(request):
         ngoed = 0
 
     return render(request, 'wijn/kleurmeerkeuze.html', locals())
+
+
+def druiven(request):
+    vraagtype = random.choice(["welkedruif","apdruif"])
+    appellations = Appellation.objects.exclude(rood=False,wit=False,rose=False,zoet=False,mousserend=False)
+    apps = appellations.order_by('?')
+
+
+    ap = appellations.order_by('?')[0]
+    while not ap.druif_set.exists():
+        ap = appellations.order_by('?')[0]
+
+
+    if vraagtype == "welkedruif":
+        druiven = list(ap.druif_set.filter(cp=True))
+        shuffle(druiven)
+        apdruif = druiven[0]
+
+        vraagtekst = u"Welke druif mag gebruikt worden in {ap.name}, {apdruif.kleur}".format(**locals())
+        keuzes = [apdruif]
+        afleiders = []
+        for app in apps:
+            appdruiven =list(app.druif_set.filter(cp=True, kleur=apdruif.kleur))
+            for druif in appdruiven:
+                afleiders.append(druif)
+        for afleider in afleiders:
+            if afleider.druif not in [d.druif for d in druiven]:
+                if afleider.druif not in [k.druif for k in keuzes]:
+                    keuzes.append(afleider)
+        keuzes = keuzes[:4] 
+        keuzes = [(k.id, k.druif) for k in keuzes]
+    else:
+        druiven = list(ap.druif_set.filter(cp=True))
+        shuffle(druiven)
+        apdruif = druiven[0]
+        vraagtekst = u"Welke appellation mag {apdruif.druif} gebruiken".format(**locals())
+        keuzes = [ap]
+        afleiders = appellations.order_by('?')
+        for afleider in afleiders:
+            if apdruif.druif not in [d.druif for d in afleider.druif_set.all()]:
+                keuzes.append(afleider)
+        keuzes = keuzes[:4] 
+        keuzes = [(k.id, k.name) for k in keuzes]
+
+    shuffle(keuzes)
+
+    if request.POST:
+        oudevraag = request.POST["vraagtekst"]
+        vraag = request.POST["vraag"]
+        oudevraagtype = request.POST["vraagtype"]
+        antwoord = request.POST["antwoord"]
+        vraag = Appellation.objects.get(pk=vraag)
+
+        if oudevraagtype == "welkedruif":
+            vraagkleur = request.POST["vraagkleur"]
+            antwoord = Druif.objects.get(pk=antwoord).druif
+            antwoorden = [d.druif for d in vraag.druif_set.filter(kleur=vraagkleur, cp=True)]
+            goed = antwoord in antwoorden
+            goedeantwoord = ",".join(antwoorden)
+        elif oudevraagtype == "apdruif":
+            goedeantwoord = vraag.name
+            antwoord = Appellation.objects.get(pk=antwoord).name
+            goed = (antwoord == goedeantwoord)
+
+        nvragen = int(request.POST["nvragen"]) + 1
+        ngoed = int(request.POST["ngoed"])
+        if goed:
+            ngoed = ngoed + 1
+        perc = 10 + nvragen*90/20
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='welkedruif', user=user, score=ngoed)
+
+    else:
+        nvragen = 0
+        ngoed = 0
+
+    return render(request, 'wijn/druiven.html', locals())
+
+
+
+
+
+
+
 
 def regiokiezer(request):
     regiolijst = list(Appellation.objects.only("region").exclude(region="").exclude(subregion="").distinct().values_list("region", flat=True))
