@@ -19,3 +19,10 @@ class Score(models.Model):
     user = models.ForeignKey(User, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     score = models.IntegerField()
+
+
+class Druif(models.Model):
+    appellation = models.ForeignKey(Appellation)
+    kleur = models.CharField(max_length=255)
+    cp =  models.BooleanField(default=True)
+    druif = models.CharField(max_length=255)
