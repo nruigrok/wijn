@@ -15,38 +15,6 @@ def index(request):
     return render(request, 'wijn/index.html', locals())
 
 
-def xxxregio(request):
-
-    ap = Appellation.objects.order_by('?')[0]
-    while overlap(ap.name,ap.region):
-         ap = Appellation.objects.order_by('?')[0]
-
-
-    afleiders = list(Appellation.objects.only("region").distinct().values_list("region", flat=True))
-    afleiders.remove(ap.region)
-    shuffle(afleiders)
-    keuzes = afleiders[:3] + [ap.region]
-    shuffle(keuzes)
-    if request.POST:
-        vraag = request.POST["appellation"]
-        vraag = Appellation.objects.get(pk=vraag)
-        if "region" in request.POST:
-            keuze = request.POST["region"]
-            goed = (keuze == vraag.region)
-        else:
-            goed = False
-        nvragen = int(request.POST["nvragen"]) + 1
-        ngoed = int(request.POST["ngoed"])
-        if goed:
-            ngoed = ngoed + 1
-        perc = 10 + nvragen*90/20
-    else:
-        nvragen = 0
-        ngoed = 0
-
-    return render(request, 'wijn/regio.html', locals())
-
-
 def regio(request):
 
     vraagtype = random.choice(["welkeregio", "welkeap"])
