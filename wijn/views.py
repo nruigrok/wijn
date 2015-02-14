@@ -73,15 +73,18 @@ def regio(request):
 
 
 
-def kleurmeerkeuze(request):
+def kleurmeerkeuze(request, regio='all'):
     vraagtype = random.choice(["welkekleur", "welkeap"])
-
+    intext = '' if regio == 'all' else ' in {regio}'.format(**locals())
+    
     appellations = Appellation.objects.exclude(rood=False,wit=False,rose=False,zoet=False,mousserend=False)
+    if regio != 'all':
+        appellations = appellations.filter(region=regio)
     ap = appellations.order_by('?')[0]
     apkleur = kleurstring(ap)
 
     if vraagtype == "welkekleur":
-        vraagtekst = u"Welke kleur mag in {ap.name}".format(**locals())
+        vraagtekst = u"Welke kleur mag{intext} in {ap.name}".format(**locals())
         keuzes = [apkleur]
         afleiders = list(appellations.order_by('?'))
         for afleider in afleiders:
@@ -90,7 +93,7 @@ def kleurmeerkeuze(request):
         keuzes = keuzes[:4] 
         keuzes = [(k, k) for k in keuzes]
     else:
-        vraagtekst = u"Welke appellation mag {apkleur}".format(**locals())
+        vraagtekst = u"Welke appellation{intext} mag {apkleur}".format(**locals())
         keuzes = [ap]
         afleiders = list(appellations.order_by('?'))
         for afleider in afleiders:
@@ -111,11 +114,13 @@ def kleurmeerkeuze(request):
 
         if oudevraagtype == "welkekleur":
             goedeantwoord = kleurstring(vraag)
+            goed = (antwoord == goedeantwoord)
         elif oudevraagtype == "welkeap":
             goedeantwoord = vraag.name
-            antwoord = Appellation.objects.get(pk=antwoord).name
-            
-        goed = (antwoord == goedeantwoord)
+            antwoord = Appellation.objects.get(pk=antwoord)
+            goed = (antwoord.name == goedeantwoord)
+            antwoordkleuren = kleurstring(antwoord)
+            antwoord = "{antwoord} ({antwoordkleuren})".format(**locals())
 
         nvragen = int(request.POST["nvragen"]) + 1
         ngoed = int(request.POST["ngoed"])
@@ -134,11 +139,14 @@ def kleurmeerkeuze(request):
     return render(request, 'wijn/kleurmeerkeuze.html', locals())
 
 
-def druiven(request):
+def druiven(request, regio='all'):
     vraagtype = random.choice(["welkedruif","apdruif"])
     appellations = Appellation.objects.exclude(rood=False,wit=False,rose=False,zoet=False,mousserend=False)
+    if regio != 'all':
+        appellations = appellations.filter(region=regio)
     apps = appellations.order_by('?')
 
+    intext = '' if regio == 'all' else ' in {regio}'.format(**locals())
 
     ap = appellations.order_by('?')[0]
     while not ap.druif_set.exists():
@@ -149,8 +157,8 @@ def druiven(request):
         druiven = list(ap.druif_set.filter(cp=True))
         shuffle(druiven)
         apdruif = druiven[0]
-
-        vraagtekst = u"Welke druif mag gebruikt worden in {ap.name}, {apdruif.kleur}".format(**locals())
+        vraagkleur = apdruif.kleur
+        vraagtekst = u"Welke druif mag {intext} gebruikt worden in {ap.name} ({vraagkleur})".format(**locals())
         keuzes = [apdruif]
         afleiders = []
         for app in apps:
@@ -167,12 +175,13 @@ def druiven(request):
         druiven = list(ap.druif_set.filter(cp=True))
         shuffle(druiven)
         apdruif = druiven[0]
-        vraagtekst = u"Welke appellation mag {apdruif.druif} gebruiken".format(**locals())
+        vraagkleur = apdruif.kleur
+        vraagtekst = u"Welke appellation {intext} mag {apdruif.druif} gebruiken ({vraagkleur})".format(**locals())
         keuzes = [ap]
-        afleiders = appellations.order_by('?')
-        for afleider in afleiders:
+        for afleider in apps:
             if apdruif.druif not in [d.druif for d in afleider.druif_set.all()]:
-                keuzes.append(afleider)
+                if afleider.druif_set.exists(): # geen afleiders waarvan we de druiven niet weten
+                    keuzes.append(afleider)
         keuzes = keuzes[:4] 
         keuzes = [(k.id, k.name) for k in keuzes]
 
@@ -183,19 +192,25 @@ def druiven(request):
         vraag = request.POST["vraag"]
         oudevraagtype = request.POST["vraagtype"]
         antwoord = request.POST["antwoord"]
+        vraagkleur = request.POST["vraagkleur"]
         vraag = Appellation.objects.get(pk=vraag)
 
         if oudevraagtype == "welkedruif":
-            vraagkleur = request.POST["vraagkleur"]
             antwoord = Druif.objects.get(pk=antwoord).druif
             antwoorden = [d.druif for d in vraag.druif_set.filter(kleur=vraagkleur, cp=True)]
             goed = antwoord in antwoorden
             goedeantwoord = ",".join(antwoorden)
         elif oudevraagtype == "apdruif":
-            goedeantwoord = vraag.name
-            antwoord = Appellation.objects.get(pk=antwoord).name
+            goedeantwoord = vraag
+            antwoord = Appellation.objects.get(pk=antwoord)
             goed = (antwoord == goedeantwoord)
-
+            goededruiven =  ",".join(d.druif for d in vraag.druif_set.filter(kleur=vraagkleur, cp=True))
+            goedeantwoord = u"{goedeantwoord.name} ({goededruiven})".format(**locals())
+            antwoorddruiven =  ",".join(d.druif for d in antwoord.druif_set.filter(kleur=vraagkleur, cp=True))
+            if not antwoorddruiven:
+                antwoorddruiven = "maakt geen {vraagkleur}".format(**locals())
+            antwoord = u"{antwoord.name} ({antwoorddruiven})".format(**locals())
+            
         nvragen = int(request.POST["nvragen"]) + 1
         ngoed = int(request.POST["ngoed"])
         if goed:
@@ -219,7 +234,7 @@ def druiven(request):
 
 
 
-def regiokiezer(request):
+def regiokiezer(request, next):
     regiolijst = list(Appellation.objects.only("region").exclude(region="").exclude(subregion="").distinct().values_list("region", flat=True))
     return render(request, 'wijn/regiokiezer.html', locals())
 
@@ -278,6 +293,10 @@ def subregio(request, regio):
 def kleurstring(ap):
     kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"] 
                          if getattr(ap, a)]).title()
+    if "," in kleurap:
+        kleurap = " en ".join(kleurap.rsplit(", ", 1))
+    else:
+        kleurap = "alleen {kleurap}".format(**locals())
     return kleurap
 
 def kleur(request, regio):

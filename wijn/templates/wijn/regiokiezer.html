@@ -7,17 +7,21 @@
 
 
 
+<div class="row">
 {% for regio in regiolijst %}
-<a class="btn btn-primary btn-lg" href="{% url 'subregio' regio=regio  %}" role="button margin:500px"> {{regio}}</a>
+<div class="col-md-3 col-sm-4">
+<a class="btn btn-primary btn-lg" href="{% url next regio=regio  %}"
+   role="button" style="width:100%;margin-bottom: 1em"> {{regio}}</a>
+</div>
 {% endfor %}
 <p>
 </p>
+<div class="col-md-3 col-sm-4">
+<a class="btn btn-primary btn-lg" href="{% url next regio="all"  %}" role="button" style="width:100%">Alle regio's</a>
+</div>
 
-<a class="btn btn-primary btn-lg" href="{% url 'subregio' regio="all"  %}" role="button">Alle regio's
 
-<a class="btn btn-primary btn-lg" href="{% url 'index' %}" role="button">Terug naar begin</a>
-
-
+</div>
 
 
 

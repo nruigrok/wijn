@@ -32,13 +32,13 @@
 <p> Aantal vragen gesteld: {{nvragen}}</p>
 <p> Score: {{ngoed}}/{{nvragen}}</p>
 
-<a class="btn btn-primary btn-lg" href="{% url 'druiven' %}" role="button">Nog een keer proberen</a>
+<a class="btn btn-primary btn-lg" href="{% url 'druiven' regio=regio %}" role="button">Nog een keer proberen</a>
 <a class="btn btn-primary btn-lg" href="{% url 'index' %}" role="button">Terug naar begin</a>
 
 {% else %}
 <h3>{{vraagtekst}}</h3>
 
-<form action="{% url 'druiven' %}" method="post">
+<form action="{% url 'druiven' regio=regio %}" method="post">
 {% csrf_token %}
 <input type='hidden' name='vraag' value='{{ap.id}}' />
 <input type='hidden' name='vraagtype' value='{{vraagtype}}' />
