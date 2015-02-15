@@ -76,7 +76,7 @@ def regio(request):
 def kleurmeerkeuze(request, regio='all'):
     vraagtype = random.choice(["welkekleur", "welkeap"])
     intext = '' if regio == 'all' else ' in {regio}'.format(**locals())
-    
+
     appellations = Appellation.objects.exclude(rood=False,wit=False,rose=False,zoet=False,mousserend=False)
     if regio != 'all':
         appellations = appellations.filter(region=regio)
@@ -90,7 +90,7 @@ def kleurmeerkeuze(request, regio='all'):
         for afleider in afleiders:
             if kleurstring(afleider) not in keuzes:
                 keuzes.append(kleurstring(afleider))
-        keuzes = keuzes[:4] 
+        keuzes = keuzes[:4]
         keuzes = [(k, k) for k in keuzes]
     else:
         vraagtekst = u"Welke appellation{intext} mag {apkleur}".format(**locals())
@@ -99,7 +99,7 @@ def kleurmeerkeuze(request, regio='all'):
         for afleider in afleiders:
             if kleurstring(afleider) != apkleur:
                 keuzes.append(afleider)
-        keuzes = keuzes[:4] 
+        keuzes = keuzes[:4]
         keuzes = [(k.id, k.name) for k in keuzes]
 
     shuffle(keuzes)
@@ -169,7 +169,7 @@ def druiven(request, regio='all'):
             if afleider.druif not in [d.druif for d in druiven]:
                 if afleider.druif not in [k.druif for k in keuzes]:
                     keuzes.append(afleider)
-        keuzes = keuzes[:4] 
+        keuzes = keuzes[:4]
         keuzes = [(k.id, k.druif) for k in keuzes]
     else:
         druiven = list(ap.druif_set.filter(cp=True))
@@ -182,7 +182,7 @@ def druiven(request, regio='all'):
             if apdruif.druif not in [d.druif for d in afleider.druif_set.all()]:
                 if afleider.druif_set.exists(): # geen afleiders waarvan we de druiven niet weten
                     keuzes.append(afleider)
-        keuzes = keuzes[:4] 
+        keuzes = keuzes[:4]
         keuzes = [(k.id, k.name) for k in keuzes]
 
     shuffle(keuzes)
@@ -210,7 +210,7 @@ def druiven(request, regio='all'):
             if not antwoorddruiven:
                 antwoorddruiven = "maakt geen {vraagkleur}".format(**locals())
             antwoord = u"{antwoord.name} ({antwoorddruiven})".format(**locals())
-            
+
         nvragen = int(request.POST["nvragen"]) + 1
         ngoed = int(request.POST["ngoed"])
         if goed:
@@ -235,7 +235,10 @@ def druiven(request, regio='all'):
 
 
 def regiokiezer(request, next):
-    regiolijst = list(Appellation.objects.only("region").exclude(region="").exclude(subregion="").distinct().values_list("region", flat=True))
+    regiolijst = Appellation.objects.only("region").exclude(region="")
+    if next == 'subregio':
+        regiolijst = regiolijst.exclude(subregion="")
+    regiolijst = list(regiolijst.distinct().values_list("region", flat=True))
     return render(request, 'wijn/regiokiezer.html', locals())
 
 def kleurperregio(request):
@@ -291,7 +294,7 @@ def subregio(request, regio):
 
 
 def kleurstring(ap):
-    kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"] 
+    kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"]
                          if getattr(ap, a)]).title()
     if "," in kleurap:
         kleurap = " en ".join(kleurap.rsplit(", ", 1))
