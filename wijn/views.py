@@ -8,7 +8,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from wijn.models import Appellation, Score, Druif
+from wijn.models import Appellation, Score, Druif, StreekWijn
 from random import shuffle
 
 def index(request):
@@ -293,6 +293,59 @@ def subregio(request, regio):
     return render(request, 'wijn/subregio.html', locals())
 
 
+
+def landenkiezer(request, next):
+    landenlijst = StreekWijn.objects.only("land")
+
+    if next == "subregios2":
+        landenlijst = landenlijst.exclude(subregion__isnull=True)
+
+    
+    landenlijst = list(landenlijst.distinct().values_list("land", flat=True))
+    return render(request, 'wijn/landenkiezer.html', locals())
+    
+
+
+
+def subregios2(request, land):
+    subregios = StreekWijn.objects.exclude(subregion__isnull=True).exclude(region="")
+    if land != "all":
+        subregios = subregios.filter(land=land)
+    vraag = subregios.order_by('?')[0]
+    
+    afleiders = list(subregios.only("region").filter(land=vraag.land).distinct().values_list("region", flat=True))
+    afleiders.remove(vraag.region)
+    shuffle(afleiders)
+    keuzes = afleiders[:3] + [vraag.region]
+    shuffle(keuzes)
+
+    if request.POST:
+        oudevraag = request.POST["vraag"]
+        oudevraag = StreekWijn.objects.get(pk=oudevraag)
+        
+        keuze = request.POST["region"]
+        goed = (keuze == oudevraag.region)
+
+        nvragen = int(request.POST["nvragen"]) + 1
+        ngoed = int(request.POST["ngoed"])
+        if goed:
+            ngoed = ngoed + 1
+        perc = 10 + nvragen*90/20
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='Subregios2', region=regio, user=user, score=ngoed)
+        
+    else:
+        nvragen = 0
+        ngoed = 0
+
+        
+    return render(request, 'wijn/subregios2.html', locals())
+
+
+    
+
 def kleurstring(ap):
     kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"]
                          if getattr(ap, a)]).title()
@@ -327,6 +380,9 @@ def kleur(request, regio):
 
     return render(request, 'wijn/kleur.html', locals())
 
+
+
+    
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30)
@@ -392,3 +448,4 @@ def scores(request):
             last[key] = s
 
     return render(request, 'wijn/scores.html', locals())
+

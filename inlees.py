@@ -1,11 +1,46 @@
 import csv, sys
-from wijn.models import Appellation, Druif
+from wijn.models import Appellation, Druif, StreekDruif, StreekWijn
 
 import django
 django.setup()
 
 Druif.objects.all().delete()
+StreekDruif.objects.all().delete()
+StreekWijn.objects.all().delete()
 Appellation.objects.all().delete()
+
+
+
+for row in csv.DictReader(open("druifjes2.csv")):
+    print row
+    land = row["Land"].decode("utf-8")
+    regio= row["Streek"].decode("utf-8")
+    kleur= row["kleur"].decode("utf-8")
+    druiven = row["CP"].decode("utf-8")
+
+    druiven = [x.strip() for x in druiven.split(",")]
+    for druif in druiven:
+        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.lower().strip())
+        
+for row in csv.DictReader(open("wijnen_nieuw.csv")):
+    print row
+    land = row["Land"].decode("utf-8")
+    regio= row["regio"].decode("utf-8")
+    subregio= row["subregio"].decode("utf-8").strip()
+    gemeente= row["gemeenten"].decode("utf-8").strip()
+    appellation = row["appellations"].decode("utf-8").strip()
+
+    if subregio == "": subregio = None
+    if gemeente == "": gemeente = None
+    if appellation == "": appellation = None
+    
+    StreekWijn.objects.create(land=land, region=regio, subregion=subregio, gemeente=gemeente, appellation=appellation)
+
+
+
+
+
+
 
 apps = csv.DictReader(open('appellations.csv'))
 

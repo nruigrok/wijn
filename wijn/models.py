@@ -26,3 +26,18 @@ class Druif(models.Model):
     kleur = models.CharField(max_length=255)
     cp =  models.BooleanField(default=True)
     druif = models.CharField(max_length=255)
+
+
+
+class StreekWijn(models.Model):
+    land = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
+    subregion = models.CharField(max_length=255, null = True)
+    gemeente = models.CharField(max_length=255, null = True)
+    appellation = models.CharField(max_length=255, null = True)
+    
+class StreekDruif(models.Model):
+    land = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
+    kleur = models.CharField(max_length=255)
+    druif = models.CharField(max_length=255)

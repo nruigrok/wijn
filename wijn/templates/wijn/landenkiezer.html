@@ -1,0 +1,32 @@
+{% extends "wijn/base.html" %}
+
+{% block content %}
+
+
+<h2>Kies hieronder een Land om de 
+{% if next == 'subregios2' %}subregios
+{% endif %}
+te oefenen</h2>
+
+
+
+<div class="row">
+{% for land in landenlijst %}
+<div class="col-md-3 col-sm-4">
+<a class="btn btn-primary btn-lg" href="{% url next land=land  %}"
+   role="button" style="width:100%;margin-bottom: 1em"> {{land}}</a>
+</div>
+{% endfor %}
+<p>
+</p>
+<div class="col-md-3 col-sm-4">
+<a class="btn btn-primary btn-lg" href="{% url next land="all"  %}" role="button" style="width:100%">Alle landen</a>
+</div>
+
+
+</div>
+
+
+
+{% endblock %}
+

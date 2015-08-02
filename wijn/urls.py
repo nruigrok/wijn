@@ -15,4 +15,9 @@ urlpatterns = patterns('',
     url(r'^kleur$', views.kleur, name='kleur'),
     url(r'^kleur/(?P<regio>[\w -]+)$', views.kleur, name='kleur'),
     url(r'^scores$', views.scores, name='scores'),
+
+
+                       
+    url(r'^subregios2$', views.landenkiezer, {'next': 'subregios2'}, name='landenkiezer-subregios2'),
+    url(r'^subregios2/(?P<land>[\w -]+)$', views.subregios2, name='subregios2'),
 )
