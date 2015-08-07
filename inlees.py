@@ -20,7 +20,7 @@ for row in csv.DictReader(open("druifjes2.csv")):
 
     druiven = [x.strip() for x in druiven.split(",")]
     for druif in druiven:
-        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.lower().strip())
+        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.title().strip())
         
 for row in csv.DictReader(open("wijnen_nieuw.csv")):
     print row

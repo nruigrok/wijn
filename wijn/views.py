@@ -8,7 +8,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from wijn.models import Appellation, Score, Druif, StreekWijn
+from wijn.models import Appellation, Score, Druif, StreekWijn, StreekDruif
 from random import shuffle
 
 def index(request):
@@ -228,8 +228,68 @@ def druiven(request, regio='all'):
     return render(request, 'wijn/druiven.html', locals())
 
 
+def streekdruiven(request, land='all'):
+    vraagtype = random.choice(["welkedruif","apdruif"])
+    vraagtype = "welkedruif"
+    streekdruiven = StreekDruif.objects.all()
+    if land != 'all':
+        streekdruiven = streekdruiven.filter(land=land)
 
+    intext = '' if regio == 'all' else ' in {land}'.format(**locals())
 
+    streekdruif = streekdruiven.order_by('?')[0]
+    vraagkleur = streekdruif.kleur
+
+    if vraagtype == "welkedruif":
+        vraagtekst = u"Welke druif mag {intext} gebruikt worden in {streekdruif.region} ({streekdruif.kleur})".format(**locals())
+        keuze = streekdruif.druif
+        alternatieven = list(streekdruiven.filter(region=streekdruif.region).values_list("druif", flat=True))        
+        afleiders = list(set(streekdruiven.filter(kleur=streekdruif.kleur).exclude(druif__in=alternatieven).values_list("druif", flat=True)))
+    else:
+        vraagtekst = u"Welke regio {intext} mag {streekdruif.druif} gebruiken ({streekdruif.kleur})".format(**locals())
+        keuze = streekdruif.region
+        alternatieven = list(streekdruiven.filter(druif=streekdruif.druif).values_list("region", flat=True))
+        afleiders = list(set(streekdruiven.exclude(region__in=alternatieven).values_list("region", flat=True)))
+
+    shuffle(afleiders)
+    keuzes = [keuze] + afleiders[:3]
+    shuffle(keuzes)
+
+    if request.POST:
+        oudevraag = request.POST["vraagtekst"]
+        vraag = StreekDruif.objects.get(pk=request.POST["vraag"])        
+        oudevraagtype = request.POST["vraagtype"]
+        antwoord = request.POST["antwoord"]
+
+        vraagdruiven = [d.druif for d in StreekDruif.objects.filter(region=vraag.region, kleur=vraag.kleur)]
+        
+        if oudevraagtype == "welkedruif":
+            goed = antwoord in vraagdruiven
+            goedeantwoord = ",".join(vraagdruiven)
+        elif oudevraagtype == "apdruif":
+            goed = (antwoord == vraag.region)
+            goededruiven = ",".join(vraagdruiven)
+            goedeantwoord = u"{vraag.region} ({goededruiven})".format(**locals())
+            
+            antwoorddruiven =  ",".join(d.druif for d in streekdruiven.filter(region=antwoord, kleur=vraag.kleur))
+            if not antwoorddruiven:
+                antwoorddruiven = "maakt geen {vraag.kleur}".format(**locals())
+            antwoord = u"{antwoord} ({antwoorddruiven})".format(**locals())
+
+        nvragen = int(request.POST["nvragen"]) + 1
+        ngoed = int(request.POST["ngoed"])
+        if goed:
+            ngoed = ngoed + 1
+        perc = 10 + nvragen*90/20
+
+        if nvragen == 20:
+            user = request.user if request.user.is_authenticated() else None
+            Score.objects.create(vraag='welkedruif', user=user, score=ngoed)
+    else:
+        nvragen = 0
+        ngoed = 0
+
+    return render(request, 'wijn/streekdruiven.html', locals())
 
 
 
@@ -295,13 +355,12 @@ def subregio(request, regio):
 
 
 def landenkiezer(request, next):
-    landenlijst = StreekWijn.objects.only("land")
-
     if next == "subregios2":
-        landenlijst = landenlijst.exclude(subregion__isnull=True)
-
+        landenlijst = StreekWijn.objects.exclude(subregion__isnull=True)
+    elif next == "streekdruiven":
+        landenlijst = StreekDruif.objects.all()
     
-    landenlijst = list(landenlijst.distinct().values_list("land", flat=True))
+    landenlijst = list(landenlijst.only("land").distinct().values_list("land", flat=True))
     return render(request, 'wijn/landenkiezer.html', locals())
     
 

@@ -1,0 +1,62 @@
+{% extends "wijn/base.html" %}
+
+{% block content %}
+
+{% if goedeantwoord %}
+
+<div class="progress">
+  <div class="progress-bar" role="progressbar" aria-valuenow="{{perc}}"
+       aria-valuemin="0" aria-valuemax="100" style="width: {{perc}}%;
+    text-align:left; padding-left: 1em">
+    Score: {{ngoed}}/{{nvragen}}
+  </div>
+</div>
+
+<div class="row">
+<div class="col-sm-4"><h4>Vraag was:</h4></div>
+<div class="col-sm-8"><h4>{{oudevraag}}</h4></div>
+</div> 
+<div class="row">
+<div class="col-sm-4"><h4>Goede antwoord:</h4></div>
+<div class="col-sm-8"><h4>{{goedeantwoord}}</h4></div>
+</div> 
+<div class="row">
+<div class="col-sm-4"><h4>Jouw keuze:</h4></div>
+<div class="col-sm-8"><h4 class='{% if goed %}goed{% else %}fout{% endif %}'>{{antwoord}}</h4></div>
+</div> 
+
+<hr/>
+{% endif %}
+{% if nvragen == 20 %}
+<h2> Overzicht </h2>
+<p> Aantal vragen gesteld: {{nvragen}}</p>
+<p> Score: {{ngoed}}/{{nvragen}}</p>
+
+<a class="btn btn-primary btn-lg" href="{% url 'streekdruiven' land=land %}" role="button">Nog een keer proberen</a>
+<a class="btn btn-primary btn-lg" href="{% url 'index' %}" role="button">Terug naar begin</a>
+
+{% else %}
+<h3>{{vraagtekst}}</h3>
+
+<form action="{% url 'streekdruiven' land=land %}" method="post">
+{% csrf_token %}
+<input type='hidden' name='vraag' value='{{streekdruif.id}}' />
+<input type='hidden' name='vraagtype' value='{{vraagtype}}' />
+<input type='hidden' name='vraagtekst' value='{{vraagtekst}}' />
+<input type='hidden' name='nvragen' value='{{nvragen}}' />
+<input type='hidden' name='ngoed' value='{{ngoed}}' />
+{% for keuze in keuzes %}
+
+<div class="row">
+<div class="col-lg-4 col-md-6 col-sm-12">
+<button class="btn btn-primary btn-lg" type="submit" name="antwoord"
+       value="{{keuze}}" style="width:100%; margin-bottom:1em">{{keuze}}</button>
+</div>
+</div>
+
+
+{% endfor %}
+</form>
+{% endif %}
+
+{% endblock %}

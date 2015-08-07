@@ -20,4 +20,8 @@ urlpatterns = patterns('',
                        
     url(r'^subregios2$', views.landenkiezer, {'next': 'subregios2'}, name='landenkiezer-subregios2'),
     url(r'^subregios2/(?P<land>[\w -]+)$', views.subregios2, name='subregios2'),
+
+    url(r'^streekdruiven$', views.landenkiezer, {'next': 'streekdruiven'}, name='landenkiezer-streekdruiven'),
+    url(r'^streekdruiven/(?P<land>[\w -]+)$', views.streekdruiven, name='streekdruiven'),
+
 )
