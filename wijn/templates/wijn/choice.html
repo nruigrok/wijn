@@ -4,11 +4,13 @@
 
 {% if antwoord %}
 <div class="progress">
-  <div class="progress-bar" role="progressbar" aria-valuenow="{{perc}}"
-       aria-valuemin="0" aria-valuemax="100" style="width: {{perc}}%;
-    text-align:left; padding-left: 1em">
-    Score: {{ngoed}}/{{nvragen}}
+  <div class="progress-bar progress-bar-success progress-bar-striped {% if correct %}active{% endif %}" style="width: {{goedperc}}%">
+    {% if ngoed >= 1 %}Score: {{ngoed}} / {{nvragen}}{% endif %}
   </div>
+  <div class="progress-bar progress-bar-danger progress-bar-striped {% if not correct %}active{% endif %}" style="width: {{foutperc}}%">
+    {% if ngoed == 0 %}Score: {{ngoed}} / {{nvragen}}{% endif %}
+  </div>
+
 </div>
 
 <div class="row">

@@ -402,7 +402,10 @@ class ChoiceView(FormView):
         context = self.get_context_data(form=form)
         nvragen = int(form.data['nvragen']) + 1
         ngoed = int(form.data['ngoed']) + (1 if correct else 0)
+        nfout = nvragen - ngoed
         perc = 10 + nvragen*90/20
+        goedperc = float(perc) * ngoed / nvragen
+        foutperc = perc - goedperc
         
         context.update(locals())
         
