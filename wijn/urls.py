@@ -24,4 +24,10 @@ urlpatterns = patterns('',
     url(r'^streekdruiven$', views.landenkiezer, {'next': 'streekdruiven'}, name='landenkiezer-streekdruiven'),
     url(r'^streekdruiven/(?P<land>[\w -]+)$', views.streekdruiven, name='streekdruiven'),
 
+    url(r'^gemeentes$', views.landenkiezer, {'next': 'gemeentes'}, name='landenkiezer-gemeentes'),
+    url(r'^gemeentes/(?P<land>[\w -]+)$', views.GemeenteView.as_view(), name='gemeentes'),
+
+    url(r'^appellations$', views.landenkiezer, {'next': 'appellations'}, name='landenkiezer-appellations'),
+    url(r'^appellations/(?P<land>[\w -]+)$', views.AppellationView.as_view(), name='appellations'),
+
 )
