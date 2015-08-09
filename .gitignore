@@ -47,7 +47,8 @@ nosetests.xml
 .idea
 
 # static files
-navigator/media/static
+static
 
 db.sqlite3
 *.csv
+
