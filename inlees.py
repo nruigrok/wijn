@@ -1,5 +1,5 @@
 import csv, sys
-from wijn.models import Appellation, Druif, StreekDruif, StreekWijn, DOCG
+from wijn.models import *
 
 import django
 django.setup()
@@ -21,10 +21,12 @@ for row in csv.DictReader(open("docg.csv")):
     druif3 = row["druif3"]
     druif4 = row["druif4"]
 
-    if doc:
-        DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=doc, isDOCG=False, druif1=druif1, druif2=druif2, druif3=druif3, druif4=druif4)
-    if docg:
-        DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=docg, isDOCG=True, druif1=druif1, druif2=druif2, druif3=druif3, druif4=druif4)
+    for (name, isdocg) in [(doc, False), (docg, True)]:
+        if name:
+            DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=name, isDOCG=isdocg)
+            for d in druif1, druif2, druif3, druif4:
+                if d:
+                    DOCGDruif.objects.create(land=land, name=name, druif=d)
     
 import sys; sys.exit()
 

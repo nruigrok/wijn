@@ -48,7 +48,8 @@ class DOCG(models.Model):
     subregio = models.CharField(max_length=255, null = True)
     name = models.CharField(max_length=255)
     isDOCG = models.BooleanField()
-    druif1 = models.CharField(max_length=255, null = True)
-    druif2 = models.CharField(max_length=255, null = True)
-    druif3 = models.CharField(max_length=255, null = True)
-    druif4 = models.CharField(max_length=255, null = True)
+
+class DOCGDruif(models.Model):
+    land = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    druif = models.CharField(max_length=255)

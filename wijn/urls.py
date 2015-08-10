@@ -34,4 +34,7 @@ urlpatterns = patterns('',
     url(r'^docg$', views.landenkiezer, {'next': 'docg'}, name='landenkiezer-docg'),
     url(r'^docg/(?P<land>[\w -]+)$', views.DOCGView.as_view(), name='docg'),
 
+    url(r'^docgdruif$', views.landenkiezer, {'next': 'docgdruif'}, name='landenkiezer-docgdruif'),
+    url(r'^docgdruif/(?P<land>[\w -]+)$', views.DOCGDruifView.as_view(), name='docgdruif'),
+
 )

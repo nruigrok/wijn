@@ -355,7 +355,7 @@ def subregio(request, regio):
 
 
 def landenkiezer(request, next):
-    if next == "docg":
+    if next in ("docg", "docgdruif"):
         landenlijst = DOCG.objects.all()
     if next == "subregios2":
         landenlijst = StreekWijn.objects.exclude(subregion__isnull=True)
@@ -489,7 +489,24 @@ class DOCGView(ChoiceView):
             return self.questions
         else:
             return [DOCG_regio, DOCG_subregio]
+
+class DOCG_druif_wel():
+    def get_objects(self):
+        return DOCGDruif.objects.all()
+    def get_goed(self, objects):
+        return objects.order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.druif
+    def get_vraag(self, goed):
+        return "Welke druif mag in {goed.name} gebruik worden?".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(name=goed.name).only("druif").distinct().values_list("druif", flat=True)
         
+
+
+
+class DOCGDruifView(ChoiceView):
+    questions = [DOCG_druif_wel]
 class GemeenteView(ChoiceView):
     questions = [Gemeente]
 class AppellationView(ChoiceView):
