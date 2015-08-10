@@ -382,7 +382,7 @@ class ChoiceView(FormView):
         antwoord = forms.TextInput()
 
     def get_context_data(self, **kwargs):
-        vraagtype = choice(self.questions)()
+        vraagtype = choice(self.get_questions())()
         objects = vraagtype.get_objects()
         if 'land' in self.kwargs:
             objects = objects.filter(land=self.kwargs['land'])
@@ -419,6 +419,9 @@ class ChoiceView(FormView):
         
         return self.render_to_response(context)
         
+    def get_questions(self):
+        return self.questions
+            
 class Gemeente():
     def get_objects(self):
         return StreekWijn.objects.exclude(subregion__isnull=True)
@@ -467,9 +470,25 @@ class DOCG_subregio():
     def get_afleiders(self, objects, goed):
         return objects.exclude(subregio=goed.subregio).only("subregio").distinct().values_list("subregio", flat=True)
 
+class isDOCG():
+    def get_objects(self):
+        return DOCG.objects.all()
+    def get_goed(self, objects):
+        return objects.order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.name
+    def get_vraag(self, goed):
+        return "Welke onderstaande wijn is {}DOCG".format("" if goed.isDOCG else "geen ")
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(isDOCG=goed.isDOCG).only("name").distinct().values_list("name", flat=True)
         
 class DOCGView(ChoiceView):
-    questions = [DOCG_regio, DOCG_subregio]
+    questions = [DOCG_regio, DOCG_subregio, isDOCG]
+    def get_questions(self):
+        if self.kwargs.get('land') == "Italie":
+            return self.questions
+        else:
+            return [DOCG_regio, DOCG_subregio]
         
 class GemeenteView(ChoiceView):
     questions = [Gemeente]
