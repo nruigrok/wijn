@@ -41,3 +41,14 @@ class StreekDruif(models.Model):
     region = models.CharField(max_length=255)
     kleur = models.CharField(max_length=255)
     druif = models.CharField(max_length=255)
+
+class DOCG(models.Model):
+    land = models.CharField(max_length=255)
+    regio = models.CharField(max_length=255)
+    subregio = models.CharField(max_length=255, null = True)
+    name = models.CharField(max_length=255)
+    isDOCG = models.BooleanField()
+    druif1 = models.CharField(max_length=255, null = True)
+    druif2 = models.CharField(max_length=255, null = True)
+    druif3 = models.CharField(max_length=255, null = True)
+    druif4 = models.CharField(max_length=255, null = True)

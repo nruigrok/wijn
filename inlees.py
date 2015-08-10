@@ -1,14 +1,37 @@
 import csv, sys
-from wijn.models import Appellation, Druif, StreekDruif, StreekWijn
+from wijn.models import Appellation, Druif, StreekDruif, StreekWijn, DOCG
 
 import django
 django.setup()
+
+DOCG.objects.all().delete()
+
+for row in csv.DictReader(open("docg.csv")):
+    for f in row:
+        row[f] = None if row[f] == "" else row[f].decode("utf-8")
+    print row
+    
+    land = row["land"]
+    regio= row["regio"]
+    subregio= row["subregio"]
+    doc = row["DOC"]
+    docg = row["DOCG"]
+    druif1 = row["druif1"]
+    druif2 = row["druif2 "]
+    druif3 = row["druif3"]
+    druif4 = row["druif4"]
+
+    if doc:
+        DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=doc, isDOCG=False, druif1=druif1, druif2=druif2, druif3=druif3, druif4=druif4)
+    if docg:
+        DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=docg, isDOCG=True, druif1=druif1, druif2=druif2, druif3=druif3, druif4=druif4)
+    
+import sys; sys.exit()
 
 Druif.objects.all().delete()
 StreekDruif.objects.all().delete()
 StreekWijn.objects.all().delete()
 Appellation.objects.all().delete()
-
 
 
 for row in csv.DictReader(open("druifjes2.csv")):

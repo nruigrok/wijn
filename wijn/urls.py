@@ -30,4 +30,8 @@ urlpatterns = patterns('',
     url(r'^appellations$', views.landenkiezer, {'next': 'appellations'}, name='landenkiezer-appellations'),
     url(r'^appellations/(?P<land>[\w -]+)$', views.AppellationView.as_view(), name='appellations'),
 
+
+    url(r'^docg$', views.landenkiezer, {'next': 'docg'}, name='landenkiezer-docg'),
+    url(r'^docg/(?P<land>[\w -]+)$', views.DOCGView.as_view(), name='docg'),
+
 )

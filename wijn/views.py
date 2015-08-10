@@ -8,8 +8,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
-from wijn.models import Appellation, Score, Druif, StreekWijn, StreekDruif
-from random import shuffle
+from wijn.models import *
+from random import shuffle, choice
 
 def index(request):
     return render(request, 'wijn/index.html', locals())
@@ -355,6 +355,8 @@ def subregio(request, regio):
 
 
 def landenkiezer(request, next):
+    if next == "docg":
+        landenlijst = DOCG.objects.all()
     if next == "subregios2":
         landenlijst = StreekWijn.objects.exclude(subregion__isnull=True)
     elif next == "gemeentes":
@@ -372,6 +374,7 @@ from django import forms
 
 class ChoiceView(FormView):
     template_name = "wijn/choice.html"
+    
     class form_class(forms.Form):
         vraag = forms.HiddenInput()
         nvragen = forms.HiddenInput()
@@ -379,24 +382,29 @@ class ChoiceView(FormView):
         antwoord = forms.TextInput()
 
     def get_context_data(self, **kwargs):
-        objects = self.get_objects()
+        vraagtype = choice(self.questions)()
+        objects = vraagtype.get_objects()
         if 'land' in self.kwargs:
             objects = objects.filter(land=self.kwargs['land'])
-        goed = self.get_goed(objects)
-        afleiders = list(self.get_afleiders(objects, goed))
+        goed = vraagtype.get_goed(objects)
+        afleiders = list(vraagtype.get_afleiders(objects, goed))
         shuffle(afleiders)
-        opties = [self.optie_text(goed)] + afleiders[:3]
+        opties = [vraagtype.optie_text(goed)] + afleiders[:3]
         shuffle(opties)
-        vraagtext = self.get_vraag(goed)
+        vraagtext = vraagtype.get_vraag(goed)
         nvragen = ngoed = 0
+        vraagtype = vraagtype.__class__.__name__
         kwargs.update(locals())
         return kwargs
 
     def form_valid(self, form):
-        oudegoed = self.get_objects().get(pk=form.data['goed'])
+        ovt, = [t for t in self.questions if t.__name__ == form.data['vraagtype']]
+        ovt = ovt()
+        
+        oudegoed =ovt .get_objects().get(pk=form.data['goed'])
         antwoord = form.data['antwoord']
-        oudevraag = self.get_vraag(oudegoed)
-        goedeantwoord = self.optie_text(oudegoed)
+        oudevraag = ovt.get_vraag(oudegoed)
+        goedeantwoord = ovt.optie_text(oudegoed)
         correct = antwoord == goedeantwoord
         
         context = self.get_context_data(form=form)
@@ -411,7 +419,7 @@ class ChoiceView(FormView):
         
         return self.render_to_response(context)
         
-class GemeenteView(ChoiceView):
+class Gemeente():
     def get_objects(self):
         return StreekWijn.objects.exclude(subregion__isnull=True)
     def get_goed(self, objects):
@@ -423,7 +431,7 @@ class GemeenteView(ChoiceView):
     def get_vraag(self, goed):
         return "In welke subregio ligt {goed.gemeente}".format(**locals())
 
-class AppellationView(ChoiceView):
+class Appellation():
     def get_objects(self):
         return StreekWijn.objects.exclude(gemeente__isnull=True).exclude(appellation__isnull=True)
     def get_goed(self, objects):
@@ -435,6 +443,39 @@ class AppellationView(ChoiceView):
     def get_vraag(self, goed):
         return "In welke gemeente ligt {goed.appellation}".format(**locals())
 
+class DOCG_regio():
+    def get_objects(self):
+        return DOCG.objects.all()
+    def get_goed(self, objects):
+        return objects.order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.regio
+    def get_vraag(self, goed):
+        return "In welke regio ligt {goed.name}".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(regio=goed.regio).only("regio").distinct().values_list("regio", flat=True)
+
+class DOCG_subregio():
+    def get_objects(self):
+        return DOCG.objects.exclude(subregio__isnull = True)
+    def get_goed(self, objects):
+        return objects.order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.subregio
+    def get_vraag(self, goed):
+        return "In welke subregio ligt {goed.name}".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(subregio=goed.subregio).only("subregio").distinct().values_list("subregio", flat=True)
+
+        
+class DOCGView(ChoiceView):
+    questions = [DOCG_regio, DOCG_subregio]
+        
+class GemeenteView(ChoiceView):
+    questions = [Gemeente]
+class AppellationView(ChoiceView):
+    questions = [Appellation]
+        
 def subregios2(request, land):
     subregios = StreekWijn.objects.exclude(subregion__isnull=True).exclude(region="")
     if land != "all":
