@@ -542,7 +542,7 @@ class GemeenteRegio(Vraag):
     def optie_text(self, goed):
         return goed.region
     def get_vraag(self, goed):
-        return "[g] In welke regio ligt {goed.gemeente}".format(**locals())
+        return "In welke regio ligt {goed.gemeente}".format(**locals())
     def get_afleiders(self, objects, goed):
         return objects.exclude(region=goed.region).only("region").distinct().values_list("region", flat=True)
 
