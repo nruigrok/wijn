@@ -406,6 +406,7 @@ class ChoiceView(FormView):
         oudevraag = ovt.get_vraag(oudegoed)
         goedeantwoord = ovt.optie_text(oudegoed)
         correct = antwoord == goedeantwoord
+        goedtext = ovt.goed_text(oudegoed)
         
         context = self.get_context_data(form=form)
         nvragen = int(form.data['nvragen']) + 1
@@ -421,8 +422,14 @@ class ChoiceView(FormView):
         
     def get_questions(self):
         return self.questions
-            
-class Gemeente():
+
+class Vraag(object):
+    def get_goed(self, objects):
+        return objects.order_by('?')[0]
+    def goed_text(self, goed):
+        return self.optie_text(goed)
+    
+class Gemeente(Vraag):
     def get_objects(self):
         return StreekWijn.objects.exclude(subregion__isnull=True)
     def get_goed(self, objects):
@@ -434,11 +441,9 @@ class Gemeente():
     def get_vraag(self, goed):
         return "In welke subregio ligt {goed.gemeente}".format(**locals())
 
-class Appellation():
+class Appellation(Vraag):
     def get_objects(self):
         return StreekWijn.objects.exclude(gemeente__isnull=True).exclude(appellation__isnull=True)
-    def get_goed(self, objects):
-        return objects.order_by('?')[0]
     def optie_text(self, goed):
         return goed.gemeente
     def get_afleiders(self, objects, goed):
@@ -446,11 +451,9 @@ class Appellation():
     def get_vraag(self, goed):
         return "In welke gemeente ligt {goed.appellation}".format(**locals())
 
-class DOCG_regio():
+class DOCG_regio(Vraag):
     def get_objects(self):
         return DOCG.objects.all()
-    def get_goed(self, objects):
-        return objects.order_by('?')[0]
     def optie_text(self, goed):
         return goed.regio
     def get_vraag(self, goed):
@@ -458,11 +461,9 @@ class DOCG_regio():
     def get_afleiders(self, objects, goed):
         return objects.exclude(regio=goed.regio).only("regio").distinct().values_list("regio", flat=True)
 
-class DOCG_subregio():
+class DOCG_subregio(Vraag):
     def get_objects(self):
         return DOCG.objects.exclude(subregio__isnull = True)
-    def get_goed(self, objects):
-        return objects.order_by('?')[0]
     def optie_text(self, goed):
         return goed.subregio
     def get_vraag(self, goed):
@@ -470,11 +471,9 @@ class DOCG_subregio():
     def get_afleiders(self, objects, goed):
         return objects.exclude(subregio=goed.subregio).only("subregio").distinct().values_list("subregio", flat=True)
 
-class isDOCG():
+class isDOCG(Vraag):
     def get_objects(self):
         return DOCG.objects.all()
-    def get_goed(self, objects):
-        return objects.order_by('?')[0]
     def optie_text(self, goed):
         return goed.name
     def get_vraag(self, goed):
@@ -482,6 +481,32 @@ class isDOCG():
     def get_afleiders(self, objects, goed):
         return objects.exclude(isDOCG=goed.isDOCG).only("name").distinct().values_list("name", flat=True)
         
+class DOCG_druif_wel(Vraag):
+    def get_objects(self):
+        return DOCGDruif.objects.all()
+    def optie_text(self, goed):
+        return goed.druif
+    def get_vraag(self, goed):
+        return "Welke druif mag in {goed.name} gebruikt worden?".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(name=goed.name).only("druif").distinct().values_list("druif", flat=True)
+    def goed_text(self, goed):
+        goededruiven = DOCGDruif.objects.filter(name=goed.name).values_list("druif", flat=True)
+        return ",".join(goededruiven)
+
+class DOCG_druif_niet(Vraag):
+    def get_objects(self):
+        return DOCGDruif.objects.all()
+    def optie_text(self, goed):
+        return goed.druif
+    def get_vraag(self, goed):
+        return "Welke druif mag in {goed.name} NIET gebruikt worden?".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.filter(name=goed.name).only("druif").distinct().values_list("druif", flat=True)
+    def goed_text(self, goed):
+        goededruiven = DOCGDruif.objects.filter(name=goed.name).values_list("druif", flat=True)
+        return ",".join(goededruiven)
+
 class DOCGView(ChoiceView):
     questions = [DOCG_regio, DOCG_subregio, isDOCG]
     def get_questions(self):
@@ -489,21 +514,6 @@ class DOCGView(ChoiceView):
             return self.questions
         else:
             return [DOCG_regio, DOCG_subregio]
-
-class DOCG_druif_wel():
-    def get_objects(self):
-        return DOCGDruif.objects.all()
-    def get_goed(self, objects):
-        return objects.order_by('?')[0]
-    def optie_text(self, goed):
-        return goed.druif
-    def get_vraag(self, goed):
-        return "Welke druif mag in {goed.name} gebruik worden?".format(**locals())
-    def get_afleiders(self, objects, goed):
-        return objects.exclude(name=goed.name).only("druif").distinct().values_list("druif", flat=True)
-        
-
-
 
 class DOCGDruifView(ChoiceView):
     questions = [DOCG_druif_wel]
