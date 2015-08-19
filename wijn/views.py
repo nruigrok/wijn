@@ -508,7 +508,7 @@ class DOCG_druif_niet(Vraag):
         return ",".join(goededruiven)
 
 class DOCGView(ChoiceView):
-    questions = [DOCG_regio, DOCG_subregio, isDOCG]
+    questions = [DOCG_regio, isDOCG]
     def get_questions(self):
         if self.kwargs.get('land') == "Italie":
             return self.questions
@@ -521,45 +521,34 @@ class GemeenteView(ChoiceView):
     questions = [Gemeente]
 class AppellationView(ChoiceView):
     questions = [Appellation]
-        
-def subregios2(request, land):
-    subregios = StreekWijn.objects.exclude(subregion__isnull=True).exclude(region="")
-    if land != "all":
-        subregios = subregios.filter(land=land)
-    vraag = subregios.order_by('?')[0]
-    
-    afleiders = list(subregios.only("region").filter(land=vraag.land).distinct().values_list("region", flat=True))
-    afleiders.remove(vraag.region)
-    shuffle(afleiders)
-    keuzes = afleiders[:3] + [vraag.region]
-    shuffle(keuzes)
 
-    if request.POST:
-        oudevraag = request.POST["vraag"]
-        oudevraag = StreekWijn.objects.get(pk=oudevraag)
-        
-        keuze = request.POST["region"]
-        goed = (keuze == oudevraag.region)
+class Subregios2(Vraag):
+    def get_objects(self):
+        return StreekWijn.objects.all()
+    def get_goed(self, objects):
+        return objects.exclude(subregion__isnull=True).order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.region
+    def get_vraag(self, goed):
+        return "In welke regio ligt {goed.subregion}".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(region=goed.region).only("region").distinct().values_list("region", flat=True)
 
-        nvragen = int(request.POST["nvragen"]) + 1
-        ngoed = int(request.POST["ngoed"])
-        if goed:
-            ngoed = ngoed + 1
-        perc = 10 + nvragen*90/20
+class GemeenteRegio(Vraag):
+    def get_objects(self):
+        return StreekWijn.objects.all()
+    def get_goed(self, objects):
+        return objects.exclude(gemeente__isnull=True).order_by('?')[0]
+    def optie_text(self, goed):
+        return goed.region
+    def get_vraag(self, goed):
+        return "[g] In welke regio ligt {goed.gemeente}".format(**locals())
+    def get_afleiders(self, objects, goed):
+        return objects.exclude(region=goed.region).only("region").distinct().values_list("region", flat=True)
 
-        if nvragen == 20:
-            user = request.user if request.user.is_authenticated() else None
-            Score.objects.create(vraag='Subregios2', region=regio, user=user, score=ngoed)
-        
-    else:
-        nvragen = 0
-        ngoed = 0
+class Subregios2View(ChoiceView):
+    questions = [Subregios2, GemeenteRegio]
 
-        
-    return render(request, 'wijn/subregios2.html', locals())
-
-
-    
 
 def kleurstring(ap):
     kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"]
