@@ -618,7 +618,7 @@ class DOCGView(ChoiceView):
         if self.kwargs.get('land') == "Italie":
             return self.questions
         else:
-            return [DOCG_regio, DOCG_subregio]
+            return [DOCG_regio]
 
 class DOCGDruifView(ChoiceView):
     questions = [DOCG_druif_wel]

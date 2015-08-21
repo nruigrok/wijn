@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import csv, sys
 from wijn.models import *
@@ -27,7 +27,7 @@ for row in csv.DictReader(open("docg.csv")):
             DOCG.objects.create(land=land, regio=regio, name=name, isDOCG=isdocg)
             for i, druif in enumerate(druiven):
                 if druif:
-                    DOCGDruif.objects.create(land=land, name=name, kleur=kleur, i=i+1, druif=druif)
+                    DOCGDruif.objects.create(land=land, name=name, kleur=kleur, i=i+1, druif=druif.title())
 
 
 for row in csv.DictReader(open("druiven_per_land.csv")):
@@ -41,7 +41,7 @@ for row in csv.DictReader(open("druiven_per_land.csv")):
     druiven = [row["druif{i}".format(**locals())] for i in range(1,8)]
     for i, druif in enumerate(druiven):
         if druif:
-            StreekDruif.objects.create(land=land, region=regio, kleur=kleur, i=i+1, druif=druif)
+            StreekDruif.objects.create(land=land, region=regio, kleur=kleur, i=i+1, druif=druif.title())
 
 import sys; sys.exit()
     
