@@ -593,7 +593,8 @@ class DOCG_druif_wel(Vraag):
     def get_vraag(self, goed):
         return "Welke druif mag in {goed.name} gebruikt worden?".format(**locals())
     def get_afleiders(self, objects, goed):
-        return objects.exclude(name=goed.name).only("druif").distinct().values_list("druif", flat=True)
+        goededruiven = DOCGDruif.objects.filter(name=goed.name).values_list("druif", flat=True)
+        return objects.exclude(druif__in=goededruiven).only("druif").distinct().values_list("druif", flat=True)
     def goed_text(self, goed):
         goededruiven = DOCGDruif.objects.filter(name=goed.name).values_list("druif", flat=True)
         return ",".join(goededruiven)
