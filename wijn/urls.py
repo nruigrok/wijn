@@ -22,8 +22,11 @@ urlpatterns = patterns('',
     url(r'^subregios2/(?P<land>[\w -]+)$', views.Subregios2View.as_view(), name='subregios2'),
 
     url(r'^streekdruiven$', views.landenkiezer, {'next': 'streekdruiven'}, name='landenkiezer-streekdruiven'),
-    url(r'^streekdruiven/(?P<land>[\w -]+)$', views.streekdruiven, name='streekdruiven'),
+    url(r'^streekdruiven/(?P<land>[\w -]+)$', views.StreekDruifView.as_view(), name='streekdruiven'),
 
+    url(r'^streekdruivenmakkelijk$', views.landenkiezer, {'next': 'streekdruiven-makkelijk'}, name='landenkiezer-streekdruiven-makkelijk'),
+    url(r'^streekdruivenmakkelijk/(?P<land>[\w -]+)$', views.StreekDruifMakkelijkView.as_view(), name='streekdruiven-makkelijk'),
+                       
     url(r'^gemeentes$', views.landenkiezer, {'next': 'gemeentes'}, name='landenkiezer-gemeentes'),
     url(r'^gemeentes/(?P<land>[\w -]+)$', views.GemeenteView.as_view(), name='gemeentes'),
 

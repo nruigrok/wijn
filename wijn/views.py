@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import re, random
 # Create your views here.
 
@@ -364,8 +366,8 @@ def landenkiezer(request, next):
         landenlijst = StreekWijn.objects.exclude(gemeente__isnull=True)
     elif next == "appellations":
         landenlijst = StreekWijn.objects.exclude(appellation__isnull=True)
-    elif next == "streekdruiven":
-        landenlijst = StreekDruif.objects.all()
+    elif next in ("streekdruiven", "streekdruiven-makkelijk"):
+        landenlijst = StreekDruif.objects.exclude(region__isnull=True)
     landenlijst = list(landenlijst.only("land").distinct().values_list("land", flat=True))
     return render(request, 'wijn/landenkiezer.html', locals())
 
@@ -385,7 +387,7 @@ class ChoiceView(FormView):
     def get_context_data(self, **kwargs):
         vraagtype = choice(self.get_questions())()
         objects = vraagtype.get_objects()
-        if 'land' in self.kwargs:
+        if 'land' in self.kwargs and self.kwargs['land'] != 'all':
             objects = objects.filter(land=self.kwargs['land'])
         goed = vraagtype.get_goed(objects)
         afleiders = list(vraagtype.get_afleiders(objects, goed))
@@ -429,6 +431,107 @@ class Vraag(object):
         return objects.order_by('?')[0]
     def goed_text(self, goed):
         return self.optie_text(goed)
+
+class WelkeDruifInStreek(Vraag):
+    def get_objects(self):
+        return StreekDruif.objects.exclude(region__isnull=True)
+    def optie_text(self, goed):
+        return goed.druif
+    def get_afleiders(self, objects, goed):
+        toegestaan = objects.filter(region=goed.region, kleur=goed.kleur).only("druif").distinct().values_list("druif", flat=True)
+        return objects.filter(kleur=goed.kleur).exclude(druif__in=toegestaan).only("druif").distinct().values_list("druif", flat=True)
+    def get_vraag(self, goed):
+        return "Welke druif mag gebruikt worden in de regio {goed.region} ({goed.kleur})".format(**locals())
+    def goed_text(self, goed):
+        toegestaan = StreekDruif.objects.filter(region=goed.region, kleur=goed.kleur).only("druif").distinct().values_list("druif", flat=True)
+        return ",".join(toegestaan)
+
+class WelkeDruifInLand(Vraag):
+    def get_objects(self):
+        return StreekDruif.objects.filter(region__isnull=True)
+    def optie_text(self, goed):
+        return goed.druif
+    def get_afleiders(self, objects, goed):
+        toegestaan = objects.filter(land=goed.land, kleur=goed.kleur).only("druif").distinct().values_list("druif", flat=True)
+        return objects.filter(kleur=goed.kleur).exclude(druif__in=toegestaan).only("druif").distinct().values_list("druif", flat=True)
+    def get_vraag(self, goed):
+        return "Welke druif mag gebruikt worden in {goed.land} ({goed.kleur})".format(**locals())
+    def goed_text(self, goed):
+        toegestaan = StreekDruif.objects.filter(land=goed.land, region__isnull=True, kleur=goed.kleur).only("druif").distinct().values_list("druif", flat=True)
+        return ",".join(toegestaan)
+    
+
+class WelkLandVoorDruif(Vraag):
+    def get_objects(self):
+        return StreekDruif.objects.filter(region__isnull=True)
+    def optie_text(self, goed):
+        return goed.land
+    def get_afleiders(self, objects, goed):
+        landenmetdruif = list(StreekDruif.objects.filter(druif=goed.druif).only("land").distinct().values_list("land", flat=True))
+        return objects.exclude(land__in=landenmetdruif).only("land").distinct().values_list("land", flat=True)   
+    def get_vraag(self, goed):
+        return "In welk land mag {goed.druif} gebruikt worden ({goed.kleur})".format(**locals())
+    def goed_text(self, goed):
+        toegestaan = StreekDruif.objects.filter(land=goed.land, kleur=goed.kleur, region__isnull=True).only("druif").distinct().values_list("druif", flat=True)
+        return "{goed.land} ({druiven})".format(druiven=",".join(toegestaan), **locals())
+
+
+class WelkeStreekVoorDruif(Vraag):
+    def get_objects(self):
+        return StreekDruif.objects.exclude(region__isnull=True)
+    def optie_text(self, goed):
+        return goed.region
+    def get_afleiders(self, objects, goed):
+        regiosmetdruif = list(StreekDruif.objects.exclude(region__isnull=True).filter(druif=goed.druif).only("region").distinct().values_list("region", flat=True))
+        return objects.exclude(region__in=regiosmetdruif).only("region").distinct().values_list("region", flat=True)   
+    def get_vraag(self, goed):
+        return "In welke regio mag {goed.druif} gebruikt worden ({goed.kleur})".format(**locals())
+    def goed_text(self, goed):
+        toegestaan = StreekDruif.objects.filter(region=goed.region, kleur=goed.kleur).only("druif").distinct().values_list("druif", flat=True)
+        return "{goed.region} ({druiven})".format(druiven=",".join(toegestaan), **locals())
+    
+class WelkeDruifInStreekMakkelijk(WelkeDruifInStreek):   
+    def get_goed(self, objects):
+        return objects.filter(i=1).order_by('?')[0]
+    def get_vraag(self, goed):
+        return "Wat is de voornaamste druif in  regio {goed.region} ({goed.kleur})".format(**locals())
+    
+ 
+class WelkeDruifInLandMakkelijk(WelkeDruifInLand):   
+    def get_goed(self, objects):
+        return objects.filter(i=1).order_by('?')[0]
+    def get_vraag(self, goed):
+        return "Wat is de voornaamste druif in {goed.land} ({goed.kleur})".format(**locals())
+    
+
+class WelkLandVoorDruifMakkelijk(WelkLandVoorDruif):
+    def get_goed(self, objects):
+        return objects.filter(i=1).order_by('?')[0]
+    def get_vraag(self, goed):
+        return "In welk land is {goed.druif} de voornaamste druif ({goed.kleur})".format(**locals())
+    
+class WelkeStreekVoorDruifMakkelijk(WelkeStreekVoorDruif):
+    def get_goed(self, objects):
+        return objects.filter(i=1).order_by('?')[0]
+    def get_vraag(self, goed):
+        return "In welke regio is {goed.druif} de voornaamste druif ({goed.kleur})".format(**locals())
+    
+class StreekDruifView(ChoiceView):
+    questions = [WelkeDruifInStreek, WelkeStreekVoorDruif, WelkLandVoorDruif, WelkeDruifInLand]
+    def get_questions(self):
+        if self.kwargs.get('land') == "all":
+            return self.questions
+        else:
+            return [WelkeDruifInStreek, WelkeStreekVoorDruif]
+
+class StreekDruifMakkelijkView(ChoiceView):
+    questions =  [WelkeDruifInStreekMakkelijk, WelkeStreekVoorDruifMakkelijk, WelkeDruifInLandMakkelijk, WelkLandVoorDruifMakkelijk]
+    def get_questions(self):
+        if self.kwargs.get('land') == "all":
+            return self.questions
+        else:
+            return [WelkeDruifInStreekMakkelijk, WelkeStreekVoorDruifMakkelijk]
+
     
 class Gemeente(Vraag):
     def get_objects(self):

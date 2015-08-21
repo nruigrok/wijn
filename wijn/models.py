@@ -38,7 +38,8 @@ class StreekWijn(models.Model):
     
 class StreekDruif(models.Model):
     land = models.CharField(max_length=255)
-    region = models.CharField(max_length=255)
+    region = models.CharField(max_length=255, null = True)
+    i = models.IntegerField()
     kleur = models.CharField(max_length=255)
     druif = models.CharField(max_length=255)
 
@@ -52,4 +53,8 @@ class DOCG(models.Model):
 class DOCGDruif(models.Model):
     land = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    kleur = models.CharField(max_length=255)
+    i = models.IntegerField()
     druif = models.CharField(max_length=255)
+
+    

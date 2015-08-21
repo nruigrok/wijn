@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import csv, sys
 from wijn.models import *
 
@@ -5,6 +7,8 @@ import django
 django.setup()
 
 DOCG.objects.all().delete()
+DOCGDruif.objects.all().delete()
+StreekDruif.objects.all().delete()
 
 for row in csv.DictReader(open("docg.csv")):
     for f in row:
@@ -13,39 +17,49 @@ for row in csv.DictReader(open("docg.csv")):
     
     land = row["land"]
     regio= row["regio"]
-    subregio= row["subregio"]
     doc = row["DOC"]
     docg = row["DOCG"]
-    druif1 = row["druif1"]
-    druif2 = row["druif2 "]
-    druif3 = row["druif3"]
-    druif4 = row["druif4"]
-
+    kleur = row["kleur"]
+    druiven = [row["druif{i}".format(**locals())] for i in range(1,8)]
+    
     for (name, isdocg) in [(doc, False), (docg, True)]:
         if name:
-            DOCG.objects.create(land=land, regio=regio, subregio=subregio, name=name, isDOCG=isdocg)
-            for d in druif1, druif2, druif3, druif4:
-                if d:
-                    DOCGDruif.objects.create(land=land, name=name, druif=d)
-    
-import sys; sys.exit()
+            DOCG.objects.create(land=land, regio=regio, name=name, isDOCG=isdocg)
+            for i, druif in enumerate(druiven):
+                if druif:
+                    DOCGDruif.objects.create(land=land, name=name, kleur=kleur, i=i+1, druif=druif)
 
+
+for row in csv.DictReader(open("druiven_per_land.csv")):
+    for f in row:
+        row[f] = None if row[f] == "" else row[f].decode("utf-8")
+    print row
+    
+    land = row["land"]
+    regio= row["regio"]
+    kleur = row["kleur"]
+    druiven = [row["druif{i}".format(**locals())] for i in range(1,8)]
+    for i, druif in enumerate(druiven):
+        if druif:
+            StreekDruif.objects.create(land=land, region=regio, kleur=kleur, i=i+1, druif=druif)
+
+import sys; sys.exit()
+    
 Druif.objects.all().delete()
-StreekDruif.objects.all().delete()
 StreekWijn.objects.all().delete()
 Appellation.objects.all().delete()
 
 
-for row in csv.DictReader(open("druifjes2.csv")):
-    print row
-    land = row["Land"].decode("utf-8")
-    regio= row["Streek"].decode("utf-8")
-    kleur= row["kleur"].decode("utf-8")
-    druiven = row["CP"].decode("utf-8")
-
-    druiven = [x.strip() for x in druiven.split(",")]
-    for druif in druiven:
-        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.title().strip())
+#for row in csv.DictReader(open("druifjes2.csv")):
+#    print row
+#    land = row["Land"].decode("utf-8")
+#    regio= row["Streek"].decode("utf-8")
+#    kleur= row["kleur"].decode("utf-8")
+#    druiven = row["CP"].decode("utf-8")#
+#
+#    druiven = [x.strip() for x in druiven.split(",")]
+#    for druif in druiven:
+#        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.title().strip())
         
 for row in csv.DictReader(open("wijnen_nieuw.csv")):
     print row
