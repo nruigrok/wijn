@@ -384,11 +384,15 @@ class ChoiceView(FormView):
         ngoed = forms.HiddenInput()
         antwoord = forms.TextInput()
 
-    def get_context_data(self, **kwargs):
-        vraagtype = choice(self.get_questions())()
+    def get_objects(self, vraagtype):
         objects = vraagtype.get_objects()
         if 'land' in self.kwargs and self.kwargs['land'] != 'all':
             objects = objects.filter(land=self.kwargs['land'])
+        return objects
+    
+    def get_context_data(self, **kwargs):
+        vraagtype = choice(list(self.get_questions()))()
+        objects = self.get_objects(vraagtype)
         goed = vraagtype.get_goed(objects)
         afleiders = list(vraagtype.get_afleiders(objects, goed))
         shuffle(afleiders)
@@ -641,18 +645,23 @@ class Subregios2(Vraag):
 
 class GemeenteRegio(Vraag):
     def get_objects(self):
-        return StreekWijn.objects.all()
+        return StreekWijn.objects.exclude(gemeente__isnull=True)
     def get_goed(self, objects):
-        return objects.exclude(gemeente__isnull=True).order_by('?')[0]
+        return objects.order_by('?')[0]
     def optie_text(self, goed):
         return goed.region
     def get_vraag(self, goed):
         return "In welke regio ligt {goed.gemeente}".format(**locals())
     def get_afleiders(self, objects, goed):
-        return objects.exclude(region=goed.region).only("region").distinct().values_list("region", flat=True)
+        return StreekWijn.objects.filter(land=goed.land).exclude(region=goed.region).only("region").distinct().values_list("region", flat=True)
 
 class Subregios2View(ChoiceView):
     questions = [Subregios2, GemeenteRegio]
+    def get_questions(self):
+        for q in self.questions:
+            if self.get_objects(q()).exists():
+                yield q
+            
 
 
 def kleurstring(ap):
