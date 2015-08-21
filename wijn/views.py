@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
 from wijn.models import *
+
 from random import shuffle, choice
 
 def index(request):
@@ -441,7 +442,7 @@ class Gemeente(Vraag):
     def get_vraag(self, goed):
         return "In welke subregio ligt {goed.gemeente}".format(**locals())
 
-class Appellation(Vraag):
+class AppellationGemeente(Vraag):
     def get_objects(self):
         return StreekWijn.objects.exclude(gemeente__isnull=True).exclude(appellation__isnull=True)
     def optie_text(self, goed):
@@ -520,7 +521,7 @@ class DOCGDruifView(ChoiceView):
 class GemeenteView(ChoiceView):
     questions = [Gemeente]
 class AppellationView(ChoiceView):
-    questions = [Appellation]
+    questions = [AppellationGemeente]
 
 class Subregios2(Vraag):
     def get_objects(self):
