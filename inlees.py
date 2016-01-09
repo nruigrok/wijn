@@ -23,6 +23,24 @@ for row in csv.DictReader(open(os.path.join(data_dir, "vragendld.csv"))):
         
     Vraag.objects.create(rubriek=rubriek, vraag=vraag,goed=goed, afleider1=afleider1, afleider2=afleider2, afleider3=afleider3,afleider4=afleider4)
 
+for row in csv.DictReader(open(os.path.join(data_dir, "vragen_stellingen.csv"))):
+    for f in row:
+        row[f] = None if row[f] == "" else row[f].decode("utf-8")
+
+    rubriek = row["rubriek"]
+    s1= row["stelling 1"]
+    s2= row["stelling 2"]
+    goed = row["goed"]
+    afleider1 = row["afleider1"]
+    afleider2 = row["afleider2"]
+    afleider3 = row["afleider3"]
+
+    vraag = "Welk van deze stellingen is correct?<br/>Stelling 1: {s1}<br/>Stelling 2: {s2}".format(**locals())
+
+    print vraag
+    
+    Vraag.objects.create(rubriek=rubriek, vraag=vraag,goed=goed, afleider1=afleider1, afleider2=afleider2, afleider3=afleider3)
+    
 DOCG.objects.all().delete()
 DOCGDruif.objects.all().delete()
 StreekDruif.objects.all().delete()
