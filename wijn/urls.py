@@ -42,4 +42,7 @@ urlpatterns = patterns('',
     url(r'^docgdruifmakkelijk$', views.landenkiezer, {'next': 'docgdruif-makkelijk'}, name='landenkiezer-docgdruif-makkelijk'),
     url(r'^docgdruifmakkelijk/(?P<land>[\w -]+)$', views.DOCGDruifMakkelijkView.as_view(), name='docgdruif-makkelijk'),
 
+    url(r'^vragen$', views.landenkiezer, {'next': 'vragen'}, name='landenkiezer-vragen'),                    
+    url(r'^vragen/(?P<land>[\w -]+)$', views.VragenView.as_view(), name='vragen'),
+
 )

@@ -58,3 +58,11 @@ class DOCGDruif(models.Model):
     druif = models.CharField(max_length=255)
 
     
+class Vraag(models.Model):
+    rubriek = models.CharField(max_length=255)
+    vraag = models.CharField(max_length=255)
+    goed = models.CharField(max_length=255)
+    afleider1 = models.CharField(max_length=255)
+    afleider2 = models.CharField(max_length=255, null = True)
+    afleider3 = models.CharField(max_length=255, null = True)
+    afleider4 = models.CharField(max_length=255, null = True)

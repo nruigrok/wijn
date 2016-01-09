@@ -1,16 +1,33 @@
 
-
-import csv, sys
-from wijn.models import *
-
 import django
 django.setup()
+
+import csv, sys, os
+from wijn.models import *
+
+data_dir = sys.argv[1]
+
+Vraag.objects.all().delete()
+
+for row in csv.DictReader(open(os.path.join(data_dir, "vragendld.csv"))):
+    for f in row:
+        row[f] = None if row[f] == "" else row[f].decode("utf-8")
+
+    rubriek = row["rubriek"]
+    vraag= row["vraag"]
+    goed = row["goed"]
+    afleider1 = row["afleider1"]
+    afleider2 = row["afleider2"]
+    afleider3 = row["afleider3"]
+    afleider4 = row["afleider4"]
+        
+    Vraag.objects.create(rubriek=rubriek, vraag=vraag,goed=goed, afleider1=afleider1, afleider2=afleider2, afleider3=afleider3,afleider4=afleider4)
 
 DOCG.objects.all().delete()
 DOCGDruif.objects.all().delete()
 StreekDruif.objects.all().delete()
 
-for row in csv.DictReader(open("docg.csv")):
+for row in csv.DictReader(open(os.path.join(data_dir, "docg.csv"))):
     for f in row:
         row[f] = None if row[f] == "" else row[f].decode("utf-8")
     print row
@@ -30,7 +47,7 @@ for row in csv.DictReader(open("docg.csv")):
                     DOCGDruif.objects.create(land=land, name=name, kleur=kleur, i=i+1, druif=druif.title())
 
 
-for row in csv.DictReader(open("druiven_per_land.csv")):
+for row in csv.DictReader(open(os.path.join(data_dir, "druiven_per_land.csv"))):
     for f in row:
         row[f] = None if row[f] == "" else row[f].decode("utf-8")
     print row
@@ -43,8 +60,6 @@ for row in csv.DictReader(open("druiven_per_land.csv")):
         if druif:
             StreekDruif.objects.create(land=land, region=regio, kleur=kleur, i=i+1, druif=druif.title())
 
-import sys; sys.exit()
-    
 Druif.objects.all().delete()
 StreekWijn.objects.all().delete()
 Appellation.objects.all().delete()
@@ -61,7 +76,7 @@ Appellation.objects.all().delete()
 #    for druif in druiven:
 #        StreekDruif.objects.create(land=land, region=regio, kleur=kleur, druif=druif.title().strip())
         
-for row in csv.DictReader(open("wijnen_nieuw.csv")):
+for row in csv.DictReader(open(os.path.join(data_dir, "wijnen_nieuw.csv"))):
     print row
     land = row["Land"].decode("utf-8")
     regio= row["regio"].decode("utf-8")
@@ -81,7 +96,7 @@ for row in csv.DictReader(open("wijnen_nieuw.csv")):
 
 
 
-apps = csv.DictReader(open('appellations.csv'))
+apps = csv.DictReader(open(os.path.join(data_dir,'appellations.csv')))
 
 for app in apps:
     print app
@@ -95,7 +110,7 @@ for app in apps:
     zoet = app["zoet"]
     Appellation.objects.create(name=naam, subregion=subregio, region=regio, wit=wit,rood=rood,rose=rose,mousserend=mousserend, zoet=zoet)
 
-druiven = csv.DictReader(open('druifjes.csv'))
+druiven = csv.DictReader(open(os.path.join(data_dir,'druifjes.csv')))
 
 for row in druiven:
     print row

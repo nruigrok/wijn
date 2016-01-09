@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 
 from wijn.models import *
+from wijn.models import Vraag as VraagModel
 
 from random import shuffle, choice
 
@@ -358,17 +359,20 @@ def subregio(request, regio):
 
 
 def landenkiezer(request, next):
-    if next in ("docg", "docgdruif", "docgdruif-makkelijk"):
-        landenlijst = DOCG.objects.all()
-    if next == "subregios2":
-        landenlijst = StreekWijn.objects.exclude(subregion__isnull=True)
-    elif next == "gemeentes":
-        landenlijst = StreekWijn.objects.exclude(gemeente__isnull=True)
-    elif next == "appellations":
-        landenlijst = StreekWijn.objects.exclude(appellation__isnull=True)
-    elif next in ("streekdruiven", "streekdruiven-makkelijk"):
-        landenlijst = StreekDruif.objects.exclude(region__isnull=True)
-    landenlijst = list(landenlijst.only("land").distinct().values_list("land", flat=True))
+    if next == "vragen":
+        landenlijst = VraagModel.objects.only("rubriek").distinct().values_list("rubriek", flat=True)
+    else:
+        if next in ("docg", "docgdruif", "docgdruif-makkelijk"):
+            landenlijst = DOCG.objects.all()
+        if next == "subregios2":
+            landenlijst = StreekWijn.objects.exclude(subregion__isnull=True)
+        elif next == "gemeentes":
+            landenlijst = StreekWijn.objects.exclude(gemeente__isnull=True)
+        elif next == "appellations":
+            landenlijst = StreekWijn.objects.exclude(appellation__isnull=True)
+        elif next in ("streekdruiven", "streekdruiven-makkelijk"):
+            landenlijst = StreekDruif.objects.exclude(region__isnull=True)
+        landenlijst = list(landenlijst.only("land").distinct().values_list("land", flat=True))
     return render(request, 'wijn/landenkiezer.html', locals())
 
 
@@ -671,8 +675,26 @@ class Subregios2View(ChoiceView):
             if self.get_objects(q()).exists():
                 yield q
             
+class Vragen(Vraag):
+    def get_objects(self):
+        return VraagModel.objects.all()
+    def get_vraag(self, vraag):
+        return vraag.vraag
+    def optie_text(self, vraag):
+        return vraag.goed
+    def get_afleiders(self, objects, vraag):
+        afleiders = [vraag.afleider1, vraag.afleider2, vraag.afleider3, vraag.afleider4]
+        return [a for a in afleiders if a is not None]
 
-
+class VragenView(ChoiceView):
+    questions = [Vragen]
+    
+    def get_objects(self, vraagtype):
+        objects = vraagtype.get_objects()
+        if 'land' in self.kwargs and self.kwargs['land'] != 'all':
+            objects = objects.filter(rubriek=self.kwargs['land'])
+        return objects
+    
 def kleurstring(ap):
     kleurap = ", ".join([a for a in ["rood", "wit", "rose", "mousserend", "zoet"]
                          if getattr(ap, a)]).title()
